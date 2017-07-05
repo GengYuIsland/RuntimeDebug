@@ -1,0 +1,1749 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    
+<head>  
+
+            <link rel="canonical" href="http://blog.csdn.net/quanqinyang/article/details/50520439"/> 
+ <meta http-equiv="Cache-Control" content="no-siteapp" /><link rel="alternate" media="handheld" href="#" />
+
+    <meta name="shenma-site-verification" content="5a59773ab8077d4a62bf469ab966a63b_1497598848"> 
+       
+    <title>详解Runtime运行时机制 - 追梦
+        - 博客频道 - CSDN.NET</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="description" content="简介Runtime 又叫运行时，是一套底层的 C 语言 API，其为 iOS 内部的核心之一，我们平时编写的 OC 代码，底层都是基于它来实现的。比如：[receiver message];// 底层运行时会被编译器转化为：objc_msgSend(receiver, selector)// 如果其还有参数比如：[receiver message:(id)arg...];//" />
+
+    <meta name="keywords" content="" />
+
+   
+    <script src="http://static.blog.csdn.net/scripts/blog_static_head.min.js" type="text/javascript"></script>
+
+    
+        <!--new top-->
+                      <!--new top-->
+    
+      <!-- ad begin -->
+         
+    <!-- ad end-->
+
+    <link rel="Stylesheet" type="text/css" href="http://static.blog.csdn.net/skin/ink/css/style.css?v=1.1" />
+
+    
+
+    <link id="RSSLink" title="RSS" type="application/rss+xml" rel="alternate" href="/quanqinayng/rss/list" />
+    <link rel="shortcut icon" href="http://c.csdnimg.cn/public/favicon.ico" />
+    <link type="text/css" rel="stylesheet" href="http://static.blog.csdn.net/scripts/SyntaxHighlighter/styles/default.css" />
+ 
+
+
+
+    <link href="http://c.csdnimg.cn/blog/csdn_public_blog_detail.min.css" type="text/css" rel="stylesheet" />
+     
+         <link rel="stylesheet" href="http://static.blog.csdn.net/css/csdn_blog_detail.min.css" />
+
+  
+
+
+    <!-- 请置于所有广告位代码之前 --> 
+            <script src="http://dup.baidustatic.com/js/ds.js"></script>
+
+</head>
+
+
+<body>
+        <div class="tracking-ad" data-view="true" data-mod="ad_popu_72"  data-mtp="62" data-order="40" data-con="ad_content_2072" >
+                     <script id="popuLayer_js_q" src="http://ads.csdn.net/js/popuLayer.js" defer="defer"  type="text/javascript"></script>
+                <div id="layerd" style="position: fixed;bottom:0px;right:0px;line-height:0px;z-index:1000">
+    	                <div class="J_close layer_close" style="display:;background-color:#efefef;padding:0px;color:#333;font:12px/24px Helvetica,Tahoma,Arial,sans-serif;text-align:right;">关闭</div><!-- 广告占位容器 --><div id="cpro_u2895327"></div></div>
+                <script>  document.getElementById("popuLayer_js_q").onload = function () { var styObjd = styObj = { width: "300px", "height": parseInt(250) + 28 }; window.CSDN.Layer.PopuLayer("#layerd", { storageName: "layerd", styleObj: styObjd, total: 50, expoire: 1000 * 60 }); }</script><!-- 投放代码 --><script type="text/javascript">                    /*服务器频道首页置顶Banner960*90，创建于2014-7-3*/    (window.cproArray = window.cproArray || []).push({ id: "u2895327" });  </script>  <script src="http://cpro.baidustatic.com/cpro/ui/c.js" type="text/javascript"></script>
+     
+        </div>
+
+    <!-- 广告位开始 -->
+        
+    <!-- 广告位结束 -->
+
+    
+   
+      <!--new top-->
+    <script id="toolbar-tpl-scriptId" fixed="true" prod="blog" skin="black" src="http://c.csdnimg.cn/public/common/toolbar/js/html.js" type="text/javascript"></script>
+     <!--new top-->
+    <div id="container">
+        <div id="header">
+    <div class="header">
+        <div id="blog_title">
+            <h2>
+                <a href="http://blog.csdn.net/quanqinyang">追梦</a></h2>
+            <h3>胜利不是最后的结局，失败也不是最终的宿命，重要的是勇气。</h3>
+            <div class="clear">
+            </div>
+        </div>
+        <div class="clear">
+        </div>
+        
+     
+    </div>
+</div>
+<div id="navigator">
+    <div class="navigator_bg">
+    </div>
+    <div class="navigator">
+        <ul>           
+                <li id="btnContents"><a href="http://blog.csdn.net/quanqinyang?viewmode=contents"><span onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_mulu'])">
+                    <img src="http://static.blog.csdn.net/images/ico_list.gif">目录视图</span></a></li>
+                <li id="btnView"><a href="http://blog.csdn.net/quanqinyang?viewmode=list"><span onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_zhaiyao'])">
+                    <img src="http://static.blog.csdn.net/images/ico_summary.gif">摘要视图</span></a></li>
+                <li id="btnRss"><a href="http://blog.csdn.net/quanqinyang/rss/list"><span onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_RSS'])">
+                    <img src="http://static.blog.csdn.net/images/ico_rss.gif">订阅</span></a></li>                
+            
+
+            </ul>
+    </div>
+</div>
+<script type="text/javascript">
+    var username = "quanqinayng";
+    var _blogger = username;
+    var blog_address = "http://blog.csdn.net/quanqinyang";
+    var static_host = "http://static.blog.csdn.net";
+    var currentUserName = "";  
+</script>
+
+        <div id="body">
+            <div id="main">
+                <div class="main">
+                        <div class="ad_class">
+<div class="notice tracking-ad" data-mod='popu_3' > 
+
+
+<a href="http://edu.csdn.net/huiyiCourse/series_detail/44?ref=blog&loc=r1">
+<font color=red><strong>【直播】大咖手把手教你做图像识别应用</strong></font></a>
+
+&nbsp;&nbsp;&nbsp;&nbsp
+
+<a href="http://blog.csdn.net/blogdevteam/article/details/74357769">
+<font color=blue><strong>CSDN日报20170704——《和代码的青春七年》</strong></font></a>
+&nbsp;&nbsp;&nbsp;&nbsp
+
+
+<a href="http://blog.csdn.net/epubit17/article/details/74279903">
+<font color=red><strong>赠书 | 7 月大咖新书：机器学习 / Android / python</strong></font></a>
+
+
+</div>                        </div>
+
+                        
+
+
+
+  
+
+
+
+
+
+
+<script   type="text/javascript" src="http://static.blog.csdn.net/scripts/category.js"></script>
+
+  <script type="text/ecmascript">
+      window.quickReplyflag = true;
+      var isBole = false; 
+      var fasrc="http://my.csdn.net/my/favorite/miniadd?t=%e8%af%a6%e8%a7%a3Runtime%e8%bf%90%e8%a1%8c%e6%97%b6%e6%9c%ba%e5%88%b6&u=http://blog.csdn.net/quanqinyang/article/details/50520439"
+    </script>
+<div id="article_details" class="details">
+    <div class="article_title">   
+         <span class="ico ico_type_Repost"></span>
+
+    <h1>
+        <span class="link_title"><a href="/quanqinyang/article/details/50520439">
+        详解Runtime运行时机制        
+           
+        </a>
+        </span>
+
+         
+    </h1>
+</div>
+
+   
+
+        <div class="article_manage clearfix">
+        <div class="article_r">
+            <span class="link_postdate">2016-01-14 21:47</span>
+            <span class="link_view" title="阅读次数">401人阅读</span>
+            <span class="link_comments" title="评论次数"> <a href="#comments" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_pinglun'])">评论</a>(0)</span>
+            <span class="link_collect tracking-ad" data-mod="popu_171"> <a href="javascript:void(0);" onclick="javascript:collectArticle('%e8%af%a6%e8%a7%a3Runtime%e8%bf%90%e8%a1%8c%e6%97%b6%e6%9c%ba%e5%88%b6','50520439');return false;" title="收藏">收藏</a></span>
+             <span class="link_report"> <a href="#report" onclick="javascript:report(50520439,2);return false;" title="举报">举报</a></span>
+
+        </div>
+    </div>    <style type="text/css">        
+            .embody{
+                padding:10px 10px 10px;
+                margin:0 -20px;
+                border-bottom:solid 1px #ededed;                
+            }
+            .embody_b{
+                margin:0 ;
+                padding:10px 0;
+            }
+            .embody .embody_t,.embody .embody_c{
+                display: inline-block;
+                margin-right:10px;
+            }
+            .embody_t{
+                font-size: 12px;
+                color:#999;
+            }
+            .embody_c{
+                font-size: 12px;
+            }
+            .embody_c img,.embody_c em{
+                display: inline-block;
+                vertical-align: middle;               
+            }
+             .embody_c img{               
+                width:30px;
+                height:30px;
+            }
+            .embody_c em{
+                margin: 0 20px 0 10px;
+                color:#333;
+                font-style: normal;
+            }
+    </style>
+    <script  type="text/javascript">
+        $(function () {
+            try
+            {
+                var lib = eval("("+$("#lib").attr("value")+")");
+                var html = "";
+                if (lib.err == 0) {
+                    $.each(lib.data, function (i) {
+                        var obj = lib.data[i];
+                        //html += '<img src="' + obj.logo + '"/>' + obj.name + "&nbsp;&nbsp;";
+                        html += ' <a href="' + obj.url + '" target="_blank">';
+                        html += ' <img src="' + obj.logo + '">';
+                        html += ' <em><b>' + obj.name + '</b></em>';
+                        html += ' </a>';
+                    });
+                    if (html != "") {
+                        setTimeout(function () {
+                            $("#lib").html(html);                      
+                            $("#embody").show();
+                        }, 100);
+                    }
+                }      
+            } catch (err)
+            { }
+            
+        });
+    </script>
+      <div class="category clearfix">
+        <div class="category_l">
+           <img src="http://static.blog.csdn.net/images/category_icon.jpg">
+            <span>分类：</span>
+        </div>
+        <div class="category_r">
+                    <label  onclick="GetCategoryArticles('1915207','quanqinayng','top','50520439');">
+                        <span onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_fenlei']);">Objective-C<em>（65）</em></span>
+                      <img class="arrow-down" src="http://static.blog.csdn.net/images/arrow_triangle _down.jpg" style="display:inline;">
+                      <img class="arrow-up" src="http://static.blog.csdn.net/images/arrow_triangle_up.jpg" style="display:none;">
+                        <div class="subItem">
+                            <div class="subItem_t"><a  href="http://blog.csdn.net/quanqinayng/article/category/1915207"  target="_blank">作者同类文章</a><i class="J_close">X</i></div>
+                            <ul class="subItem_l" id="top_1915207">                            
+                            </ul>
+                        </div>
+                    </label>                    
+        </div>
+    </div>
+
+  
+
+  
+  
+     
+
+
+<div id="article_content" class="article_content tracking-ad" data-mod=popu_307  data-dsm = "post" >
+
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+简介</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Runtime 又叫运行时，是一套底层的 C 语言 API，其为 iOS 内部的核心之一，我们平时编写的 OC 代码，底层都是基于它来实现的。比如：</p>
+<pre class="hljs scheme" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="scheme" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-list">[<span class="hljs-keyword" style="color:rgb(133,153,0)">receiver</span> message]<span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+// 底层运行时会被编译器转化为：
+objc_msgSend<span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">receiver</span>, selector)</span>
+// 如果其还有参数比如：
+<span class="hljs-list">[<span class="hljs-keyword" style="color:rgb(133,153,0)">receiver</span> message:<span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span>)</span>arg...]<span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+// 底层运行时会被编译器转化为：
+objc_msgSend<span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">receiver</span>, selector, arg1, arg2, ...)</span></span></span></code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+以上你可能看不出它的价&#20540;，但是我们需要了解的是 Objective-C 是一门动态语言，它会将一些工作放在代码运行时才处理而并非编译时。也就是说，有很多类和成员变量在我们编译的时是不知道的，而在运行时，我们所编写的代码会转换成完整的确定的代码运行。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+因此，编译器是不够的，我们还需要一个运行时系统(Runtime system)来处理编译后的代码。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Runtime 基本是用 C 和汇编写的，由此可见苹果为了动态系统的高效而做出的努力。苹果和 GNU 各自维护一个开源的 Runtime 版本，这两个版本之间都在努力保持一致。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+点击<a target="_blank" href="http://www.opensource.apple.com/source/objc4/" target="_blank" style="color:rgb(64,148,199); text-decoration:none">这里</a>下载苹果维护的开源代码。</p>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+Runtime 的作用</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Objc 在三种层面上与 Runtime 系统进行交互：</p>
+<ol style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px">通过 Objective-C 源代码</li><li style="line-height:30px">通过 Foundation 框架的 NSObject 类定义的方法</li><li style="line-height:30px">通过对 Runtime 库函数的直接调用</li></ol>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+Objective-C 源代码</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+多数情况我们只需要编写 OC 代码即可，Runtime 系统自动在幕后搞定一切，还记得简介中如果我们调用方法，编译器会将 OC 代码转换成运行时代码，在运行时确定数据结构和函数。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+通过 Foundation 框架的 NSObject 类定义的方法</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Cocoa 程序中绝大部分类都是 NSObject 类的子类，所以都继承了 NSObject 的行为。(NSProxy 类时个例外，它是个抽象超类)</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+一些情况下，NSObject 类仅仅定义了完成某件事情的模板，并没有提供所需要的代码。例如&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-description</code>&nbsp;方法，该方法返回类内容的字符串表示，该方法主要用来调试程序。NSObject
+ 类并不知道子类的内容，所以它只是返回类的名字和对象的地址，NSObject 的子类可以重新实现。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+还有一些 NSObject 的方法可以从 Runtime 系统中获取信息，允许对象进行自我检查。例如：</p>
+<ul style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px"><code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-class</code>方法返回对象的类；</li><li style="line-height:30px"><code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-isKindOfClass:</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-isMemberOfClass:</code>&nbsp;方法检查对象是否存在于指定的类的继承体系中(是否是其子类或者父类或者当前类的成员变量)；</li><li style="line-height:30px"><code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-respondsToSelector:</code>&nbsp;检查对象能否响应指定的消息；</li><li style="line-height:30px"><code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-conformsToProtocol:</code>检查对象是否实现了指定协议类的方法；</li><li style="line-height:30px"><code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-methodForSelector:</code>&nbsp;返回指定方法实现的地址。</li></ul>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+通过对 Runtime 库函数的直接调用</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Runtime 系统是具有公共接口的动态共享库。头文件存放于/usr/include/objc目录下，这意味着我们使用时只需要引入<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc/Runtime.h</code>头文件即可。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+许多函数可以让你使用纯 C 代码来实现 Objc 中同样的功能。除非是写一些 Objc 与其他语言的桥接或是底层的 debug 工作，你在写 Objc 代码时一般不会用到这些 C 语言函数。对于公共接口都有哪些，后面会讲到。我将会参考苹果官方的 API 文档。</p>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+一些 Runtime 的术语的数据结构</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+要想全面了解 Runtime 机制，我们必须先了解 Runtime 的一些术语，他们都对应着数据结构。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+SEL</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+它是<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">selector</code>在 Objc 中的表示(Swift 中是 Selector 类)。selector
+ 是方法选择器，其实作用就和名字一样，日常生活中，我们通过人名辨别谁是谁，注意 Objc 在相同的类中不会有命名相同的两个方法。selector 对方法名进行包装，以便找到对应的方法实现。它的数据结构是：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_selector *SEL;</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+我们可以看出它是个映射到方法的 C 字符串，你可以通过 Objc 编译器器命令<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">@selector()</code>&nbsp;或者
+ Runtime 系统的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">sel_registerName</code>&nbsp;函数来获取一个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code>&nbsp;类型的方法选择器。</p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+不同类中相同名字的方法所对应的 selector 是相同的，由于变量的类型不同，所以不会导致它们调用方法实现混乱。</p>
+</blockquote>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+id</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+id 是一个参数类型，它是指向某个类的实例的指针。定义如下：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_object *<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span>;
+<span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_object { Class isa; };</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+以上定义，看到&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_object</code>&nbsp;结构体包含一个 isa 指针，根据 isa 指针就可以找到对象所属的类。</p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+isa 指针在代码运行时并不总指向实例对象所属的类型，所以不能依靠它来确定类型，要想确定类型还是需要用对象的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">-class</code>&nbsp;方法。</p>
+</blockquote>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+PS:KVO 的实现机理就是将被观察对象的 isa 指针指向一个中间类而不是真实类型，详见:<a target="_blank" href="http://lizhaoloveit.com/2014/05/11/KVO/" target="_blank" style="color:rgb(64,148,199); text-decoration:none">KVO章节</a>。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+Class</h3>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_class *Class;</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Class</code>&nbsp;其实是指向&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_class</code>&nbsp;结构体的指针。<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_class</code>&nbsp;的数据结构如下：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_class {
+    Class isa  OBJC_ISA_<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABILITY</span>;
+
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#if !__OBJC2__</span>
+    Class super_class                                        OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">const</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">char</span> *name                                         OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">long</span> version                                             OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">long</span> info                                                OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">long</span> instance_size                                       OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_ivar_list *ivars                             OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_method_list **methodLists                    OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_cache *cache                                 OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_protocol_list *protocols                     OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#endif</span>
+
+} OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+从&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_class</code>&nbsp;可以看到，一个运行时类中关联了它的父类指针、类名、成员变量、方法、缓存以及附属的协议。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+其中&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_ivar_list</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_method_list</code>&nbsp;分别是成员变量列表和方法列表：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-comment" style="color:rgb(147,161,161)">// 成员变量列表</span>
+<span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_ivar_list {
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> ivar_count                                           OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#ifdef __LP64__</span>
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> space                                                OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#endif</span>
+    <span class="hljs-comment" style="color:rgb(147,161,161)">/* variable length structure */</span>
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_ivar ivar_list[<span class="hljs-number" style="color:rgb(42,161,152)">1</span>]                            OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+}                                                            OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+
+<span class="hljs-comment" style="color:rgb(147,161,161)">// 方法列表</span>
+<span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_method_list {
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_method_list *obsolete                        OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> method_count                                         OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#ifdef __LP64__</span>
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> space                                                OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#endif</span>
+    <span class="hljs-comment" style="color:rgb(147,161,161)">/* variable length structure */</span>
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_method method_list[<span class="hljs-number" style="color:rgb(42,161,152)">1</span>]                        OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+}</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+由此可见，我们可以动态修改&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">*methodList</code>&nbsp;的&#20540;来添加成员方法，这也是 Category 实现的原理，同样解释了
+ Category 不能添加属性的原因。这里可以参考下美团技术团队的文章：<a target="_blank" href="http://tech.meituan.com/DiveIntoCategory.html" target="_blank" style="color:rgb(64,148,199); text-decoration:none">深入理解 Objective-C: Category</a>。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_ivar_list</code>&nbsp;结构体用来存储成员变量的列表，而&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_ivar</code>&nbsp;则是存储了单个成员变量的信息；同理，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_method_list</code>&nbsp;结构体存储着方法数组的列表，而单个方法的信息则由&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_method</code>&nbsp;结构体存储。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+&#20540;得注意的时，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_class</code>&nbsp;中也有一个 isa 指针，这说明 Objc 类本身也是一个对象。为了处理类和对象的关系，Runtime
+ 库创建了一种叫做 Meta Class(元类) 的东西，类对象所属的类就叫做元类。Meta Class 表述了类对象本身所具备的元数据。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+我们所熟悉的类方法，就源自于 Meta Class。我们可以理解为类方法就是类对象的实例方法。每个类仅有一个类对象，而每个类对象仅有一个与之相关的元类。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+当你发出一个类&#20284;&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">[NSObject alloc](类方法)</code>&nbsp;的消息时，实际上，这个消息被发送给了一个类对象(Class
+ Object)，这个类对象必须是一个元类的实例，而这个元类同时也是一个根元类(Root Meta Class)的实例。所有元类的 isa 指针最终都指向根元类。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+所以当&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">[NSObject alloc]</code>&nbsp;这条消息发送给类对象的时候，运行时代码&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend()</code>会去它元类中查找能够响应消息的方法实现，如果找到了，就会对这个类对象执行方法调用。</p>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://upload-images.jianshu.io/upload_images/1330553-81f64a11ad20c764.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" class="imagebubble-image" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+上图实现是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">super_class</code>&nbsp;指针，虚线时&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">isa</code>&nbsp;指针。而根元类的父类是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">isa</code>指向了自己。而&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;没有父类。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+最后&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_class</code>&nbsp;中还有一个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_cache</code>&nbsp;，缓存，它的作用很重要，后面会提到。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+Method</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Method 代表类中某个方法的类型</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_method *Method;
+
+<span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_method {
+    SEL method_name                                          OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">char</span> *method_types                                       OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    IMP method_imp                                           OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+}</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_method</code>&nbsp;存储了方法名，方法类型和方法实现：</p>
+<ul style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px">方法名类型为&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code></li><li style="line-height:30px">方法类型&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">method_types</code>&nbsp;是个 char
+ 指针，存储方法的参数类型和返回&#20540;类型</li><li style="line-height:30px"><code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">method_imp</code>&nbsp;指向了方法的实现，本质是一个函数指针</li></ul>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+Ivar</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Ivar</code>&nbsp;是表示成员变量的类型。</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_ivar *Ivar;
+
+<span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_ivar {
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">char</span> *ivar_name                                          OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">char</span> *ivar_type                                          OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> ivar_offset                                          OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#ifdef __LP64__</span>
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> space                                                OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+<span class="hljs-preprocessor" style="color:rgb(203,75,22)">#endif</span>
+}</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+其中&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">ivar_offset</code>&nbsp;是基地址偏移字节</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+IMP</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+IMP在objc.h中的定义是：</p>
+<pre class="hljs lisp" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="lisp" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">typedef id <span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">*IMP</span>)</span><span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span>, SEL, ...)</span><span class="hljs-comment" style="color:rgb(147,161,161)">;</span></code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+它就是一个函数指针，这是由编译器生成的。当你发起一个 ObjC 消息之后，最终它会执行的那段代码，就是由这个函数指针指定的。而&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">IMP</code>&nbsp;这个函数指针就指向了这个方法的实现。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+如果得到了执行某个实例某个方法的入口，我们就可以绕开消息传递阶段，直接执行方法，这在后面&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Cache</code>&nbsp;中会提到。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+你会发现&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">IMP</code>&nbsp;指向的方法与&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend</code>&nbsp;函数类型相同，参数都包含&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">id</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code>&nbsp;类型。每个方法名都对应一个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code>&nbsp;类型的方法选择器，而每个实例对象中的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code>&nbsp;对应的方法实现肯定是唯一的，通过一组&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">id</code>和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code>&nbsp;参数就能确定唯一的方法实现地址。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+而一个确定的方法也只有唯一的一组&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">id</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">SEL</code>&nbsp;参数。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+Cache</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Cache 定义如下：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_cache *Cache
+
+<span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_cache {
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">unsigned</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> mask <span class="hljs-comment" style="color:rgb(147,161,161)">/* total = mask &#43; 1 */</span>                 OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">unsigned</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> occupied                                    OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+    Method buckets[<span class="hljs-number" style="color:rgb(42,161,152)">1</span>]                                        OBJC2_UN<span class="hljs-built_in" style="color:rgb(38,139,210)">AVAILABLE</span>;
+};</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Cache 为方法调用的性能进行优化，每当实例对象接收到一个消息时，它不会直接在 isa 指针指向的类的方法列表中遍历查找能够响应的方法，因为每次都要查找效率太低了，而是优先在 Cache 中查找。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+Runtime 系统会把被调用的方法存到 Cache 中，如果一个方法被调用，那么它有可能今后还会被调用，下次查找的时候就会效率更高。就像计算机组成原理中 CPU 绕过主存先访问 Cache 一样。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+Property</h3>
+<pre class="hljs cpp" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="cpp" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_property *Property;
+<span class="hljs-keyword" style="color:rgb(133,153,0)">typedef</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_property *<span class="hljs-keyword" style="color:rgb(133,153,0)">objc_property_t</span>;<span class="hljs-comment" style="color:rgb(147,161,161)">//这个更常用</span></code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+可以通过<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class_copyPropertyList</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">protocol_copyPropertyList</code>&nbsp;方法获取类和协议中的属性：</p>
+<pre class="hljs cpp" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="cpp" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">objc_property_t</span> *class_copyPropertyList(Class cls, <span class="hljs-keyword" style="color:rgb(133,153,0)">unsigned</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> *outCount)
+<span class="hljs-keyword" style="color:rgb(133,153,0)">objc_property_t</span> *protocol_copyPropertyList(Protocol *proto, <span class="hljs-keyword" style="color:rgb(133,153,0)">unsigned</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> *outCount)</code></pre>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+返回的是属性列表，列表中每个元素都是一个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_property_t</code>&nbsp;指针</p>
+</blockquote>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-preprocessor" style="color:rgb(203,75,22)">#import <span class="hljs-title" style="color:rgb(38,139,210)">&lt;Foundation/Foundation.h&gt;</span></span>
+
+<span class="hljs-class"><span class="hljs-keyword" style="color:rgb(133,153,0)">@interface</span> <span class="hljs-title" style="color:rgb(181,137,0)">Person</span> : <span class="hljs-title" style="color:rgb(181,137,0)">NSObject</span></span>
+
+<span class="hljs-comment" style="color:rgb(147,161,161)">/** 姓名 */</span>
+<span class="hljs-keyword" style="color:rgb(133,153,0)">@property</span> (<span class="hljs-keyword" style="color:rgb(133,153,0)">strong</span>, <span class="hljs-keyword" style="color:rgb(133,153,0)">nonatomic</span>) <span class="hljs-built_in" style="color:rgb(38,139,210)">NSString</span> *name;
+
+<span class="hljs-comment" style="color:rgb(147,161,161)">/** age */</span>
+<span class="hljs-keyword" style="color:rgb(133,153,0)">@property</span> (<span class="hljs-keyword" style="color:rgb(133,153,0)">assign</span>, <span class="hljs-keyword" style="color:rgb(133,153,0)">nonatomic</span>) <span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> age;
+
+<span class="hljs-comment" style="color:rgb(147,161,161)">/** weight */</span>
+<span class="hljs-keyword" style="color:rgb(133,153,0)">@property</span> (<span class="hljs-keyword" style="color:rgb(133,153,0)">assign</span>, <span class="hljs-keyword" style="color:rgb(133,153,0)">nonatomic</span>) <span class="hljs-keyword" style="color:rgb(133,153,0)">double</span> weight;
+
+<span class="hljs-keyword" style="color:rgb(133,153,0)">@end</span></code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+以上是一个 Person 类，有3个属性。让我们用上述方法获取类的运行时属性。</p>
+<pre class="hljs lisp" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="lisp" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">    unsigned int outCount = <span class="hljs-number" style="color:rgb(42,161,152)">0</span><span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+
+    objc_property_t *properties = class_copyPropertyList<span class="hljs-list">([Person class], <span class="hljs-keyword" style="color:rgb(133,153,0)">&amp;outCount</span>)</span><span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+
+    NSLog<span class="hljs-list">(@<span class="hljs-string" style="color:rgb(147,161,161)">&quot;%d&quot;</span>, outCount)</span><span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+
+    for <span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">NSInteger</span> i = <span class="hljs-number" style="color:rgb(42,161,152)">0</span><span class="hljs-comment" style="color:rgb(147,161,161)">; i &lt; outCount; i&#43;&#43;) {</span>
+        NSString <span class="hljs-variable" style="color:rgb(181,137,0)">*name = @(property_getName(properties[i]));
+        NSString *</span>attributes = @<span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">property_getAttributes</span><span class="hljs-list">(<span class="hljs-keyword" style="color:rgb(133,153,0)">properties</span>[i])</span>)</span><span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+        NSLog<span class="hljs-list">(@<span class="hljs-string" style="color:rgb(147,161,161)">&quot;%@--------%@&quot;</span>, name, attributes)</span><span class="hljs-comment" style="color:rgb(147,161,161)">;</span>
+    }</span></code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+打印结果如下：</p>
+<pre class="hljs cpp" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="cpp" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-number" style="color:rgb(42,161,152)">2014</span>-<span class="hljs-number" style="color:rgb(42,161,152)">11</span>-<span class="hljs-number" style="color:rgb(42,161,152)">10</span> <span class="hljs-number" style="color:rgb(42,161,152)">11</span>:<span class="hljs-number" style="color:rgb(42,161,152)">27</span>:<span class="hljs-number" style="color:rgb(42,161,152)">28.473</span> test[<span class="hljs-number" style="color:rgb(42,161,152)">2321</span>:<span class="hljs-number" style="color:rgb(42,161,152)">451525</span>] <span class="hljs-number" style="color:rgb(42,161,152)">3</span>
+<span class="hljs-number" style="color:rgb(42,161,152)">2014</span>-<span class="hljs-number" style="color:rgb(42,161,152)">11</span>-<span class="hljs-number" style="color:rgb(42,161,152)">10</span> <span class="hljs-number" style="color:rgb(42,161,152)">11</span>:<span class="hljs-number" style="color:rgb(42,161,152)">27</span>:<span class="hljs-number" style="color:rgb(42,161,152)">28.473</span> test[<span class="hljs-number" style="color:rgb(42,161,152)">2321</span>:<span class="hljs-number" style="color:rgb(42,161,152)">451525</span>] name--------T@<span class="hljs-string" style="color:rgb(42,161,152)">&quot;NSString&quot;</span>,&amp;,N,V_name
+<span class="hljs-number" style="color:rgb(42,161,152)">2014</span>-<span class="hljs-number" style="color:rgb(42,161,152)">11</span>-<span class="hljs-number" style="color:rgb(42,161,152)">10</span> <span class="hljs-number" style="color:rgb(42,161,152)">11</span>:<span class="hljs-number" style="color:rgb(42,161,152)">27</span>:<span class="hljs-number" style="color:rgb(42,161,152)">28.473</span> test[<span class="hljs-number" style="color:rgb(42,161,152)">2321</span>:<span class="hljs-number" style="color:rgb(42,161,152)">451525</span>] age--------Ti,N,V_age
+<span class="hljs-number" style="color:rgb(42,161,152)">2014</span>-<span class="hljs-number" style="color:rgb(42,161,152)">11</span>-<span class="hljs-number" style="color:rgb(42,161,152)">10</span> <span class="hljs-number" style="color:rgb(42,161,152)">11</span>:<span class="hljs-number" style="color:rgb(42,161,152)">27</span>:<span class="hljs-number" style="color:rgb(42,161,152)">28.474</span> test[<span class="hljs-number" style="color:rgb(42,161,152)">2321</span>:<span class="hljs-number" style="color:rgb(42,161,152)">451525</span>] weight--------Td,N,V_weight</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">property_getName</code>&nbsp;用来查找属性的名称，返回 c 字符串。<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">property_getAttributes</code>&nbsp;函数挖掘属性的真实名称和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">@encode</code>&nbsp;类型，返回
+ c 字符串。</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">objc_property_t class_getProperty(Class cls, <span class="hljs-keyword" style="color:rgb(133,153,0)">const</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">char</span> *name)
+objc_property_t protocol_getProperty(Protocol *proto, <span class="hljs-keyword" style="color:rgb(133,153,0)">const</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">char</span> *name, <span class="hljs-built_in" style="color:rgb(38,139,210)">BOOL</span> isRequiredProperty, <span class="hljs-built_in" style="color:rgb(38,139,210)">BOOL</span> isInstanceProperty)</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class_getProperty</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">protocol_getProperty</code>&nbsp;通过给出属性名在类和协议中获得属性的引用。</p>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+消息</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+一些 Runtime 术语讲完了，接下来就要说到消息了。体会苹果官方文档中的 messages aren’t bound to method implementations until Runtime。消息直到运行时才会与方法实现进行绑定。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+这里要清楚一点，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend</code>&nbsp;方法看清来好像返回了数据，其实<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend</code>&nbsp;从不返回数据，而是你的方法在运行时实现被调用后才会返回数据。下面详细叙述消息发送的步骤(如下图)：</p>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://upload-images.jianshu.io/upload_images/1330553-87d03a7c0971c730.gif?imageMogr2/auto-orient/strip" class="imagebubble-image" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<ol style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px">首先检测这个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">selector</code>&nbsp;是不是要忽略。比如
+ Mac OS X 开发，有了垃圾回收就不理会 retain，release 这些函数。</li><li style="line-height:30px">检测这个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">selector</code>&nbsp;的 target
+ 是不是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">nil</code>，Objc 允许我们对一个 nil 对象执行任何方法不会 Crash，因为运行时会被忽略掉。</li><li style="line-height:30px">如果上面两步都通过了，那么就开始查找这个类的实现&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">IMP</code>，先从
+ cache 里查找，如果找到了就运行对应的函数去执行相应的代码。</li><li style="line-height:30px">如果 cache 找不到就找类的方法列表中是否有对应的方法。</li><li style="line-height:30px">如果类的方法列表中找不到就到父类的方法列表中查找，一直找到 NSObject 类为止。</li><li style="line-height:30px">如果还找不到，就要开始进入<strong>动态方法解析</strong>了，后面会提到。</li></ol>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+在消息的传递中，编译器会根据情况在&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend</code>&nbsp;，&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend_stret</code>&nbsp;，&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSendSuper</code>&nbsp;，&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSendSuper_stret</code>&nbsp;这四个方法中选择一个调用。如果消息是传递给父类，那么会调用名字带有
+ Super 的函数，如果消息返回&#20540;是数据结构而不是简单&#20540;时，会调用名字带有 stret 的函数。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+方法中的隐藏参数</h3>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+疑问：<br>
+我们经常用到关键字&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;，但是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;是如何获取当前方法的对象呢？</p>
+</blockquote>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+其实，这也是 Runtime 系统的作用，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;实在方法运行时被动态传入的。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+当&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend</code>&nbsp;找到方法对应实现时，它将直接调用该方法实现，并将消息中所有参数都传递给方法实现，同时，它还将传递两个隐藏参数：</p>
+<ul style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px">接受消息的对象(<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;所指向的内容，当前方法的对象指针)</li><li style="line-height:30px">方法选择器(<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">_cmd</code>&nbsp;指向的内容，当前方法的
+ SEL 指针)</li></ul>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+因为在源代码方法的定义中，我们并没有发现这两个参数的声明。它们时在代码被编译时被插入方法实现中的。尽管这些参数没有被明确声明，在源代码中我们仍然可以引用它们。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+这两个参数中，&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>更实用。它是在方法实现中访问消息接收者对象的实例变量的途径。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+这时我们可能会想到另一个关键字&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">super</code>&nbsp;，实际上&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">super</code>&nbsp;关键字接收到消息时，编译器会创建一个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_super</code>&nbsp;结构体：</p>
+<pre class="hljs cs" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="cs" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">struct</span> objc_super { id receiver; Class <span class="hljs-keyword" style="color:rgb(133,153,0)">class</span>; };</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+这个结构体指明了消息应该被传递给特定的父类。&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">receiver</code>&nbsp;仍然是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;本身，当我们想通过&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">[super
+ class]</code>&nbsp;获取父类时，编译器其实是将指向&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">id</code>&nbsp;指针和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class</code>&nbsp;的
+ SEL 传递给了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSendSuper</code>&nbsp;函数。只有在&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;类中才能找到&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class</code>&nbsp;方法，然后&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class</code>&nbsp;方法底层被转换为&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">object_getClass()</code>，
+ 接着底层编译器将代码转换为&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">objc_msgSend(objc_super-&gt;receiver, @selector(class))</code>，传入的第一个参数是指向&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">id</code>&nbsp;指针，与调用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">[self
+ class]</code>&nbsp;相同，所以我们得到的永远都是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>&nbsp;的类型。因此你会发现：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-comment" style="color:rgb(147,161,161)">// 这句话并不能获取父类的类型，只能获取当前类的类型名</span>
+<span class="hljs-built_in" style="color:rgb(38,139,210)">NSLog</span>(<span class="hljs-string" style="color:rgb(42,161,152)">@&quot;%@&quot;</span>, <span class="hljs-built_in" style="color:rgb(38,139,210)">NSStringFromClass</span>([<span class="hljs-keyword" style="color:rgb(133,153,0)">super</span> class]));</code></pre>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+获取方法地址</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;类中有一个实例方法：<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">methodForSelector</code>，你可以用它来获取某个方法选择器对应的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">IMP</code>&nbsp;，举个例子：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">void</span> (*setter)(<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span>, SEL, <span class="hljs-built_in" style="color:rgb(38,139,210)">BOOL</span>);
+<span class="hljs-keyword" style="color:rgb(133,153,0)">int</span> i;
+
+setter = (<span class="hljs-keyword" style="color:rgb(133,153,0)">void</span> (*)(<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span>, SEL, <span class="hljs-built_in" style="color:rgb(38,139,210)">BOOL</span>))[target
+    methodForSelector:<span class="hljs-keyword" style="color:rgb(133,153,0)">@selector</span>(setFilled:)];
+<span class="hljs-keyword" style="color:rgb(133,153,0)">for</span> ( i = <span class="hljs-number" style="color:rgb(42,161,152)">0</span> ; i &lt; <span class="hljs-number" style="color:rgb(42,161,152)">1000</span> ; i&#43;&#43; )
+    setter(targetList[i], <span class="hljs-keyword" style="color:rgb(133,153,0)">@selector</span>(setFilled:), <span class="hljs-literal">YES</span>);</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+当方法被当做函数调用时，两个隐藏参数也必须明确给出，上面的例子调用了1000次函数，你也可以尝试给&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">target</code>&nbsp;发送1000次&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">setFilled:</code>&nbsp;消息会花多久。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+虽然可以更高效的调用方法，但是这种做法很少用，除非时需要持续大量重复调用某个方法的情况，才会选择使用以免消息发送泛滥。</p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">methodForSelector:</code>方法是由 Runtime 系统提供的，而不是 Objc 自身的特性</p>
+</blockquote>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+动态方法解析</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+你可以动态提供一个方法实现。如果我们使用关键字&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">@dynamic</code>&nbsp;在类的实现文件中修饰一个属性，表明我们会为这个属性动态提供存取方法，编译器不会再默认为我们生成这个属性的
+ setter 和 getter 方法了，需要我们自己提供。</p>
+<pre class="hljs css" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="css" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-at_rule">@<span class="hljs-keyword" style="color:rgb(133,153,0)">dynamic</span> propertyName</span>;</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+这时，我们可以通过分别重载&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">resolveInstanceMethod:</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">resolveClassMethod:</code>&nbsp;方法添加实例方法实现和类方法实现。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+当 Runtime 系统在 Cache 和类的方法列表(包括父类)中找不到要执行的方法时，Runtime 会调用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">resolveInstanceMethod:</code>&nbsp;或&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">resolveClassMethod:</code>&nbsp;来给我们一次动态添加方法实现的机会。我们需要用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class_addMethod</code>&nbsp;函数完成向特定类添加特定方法实现的操作：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">void</span> dynamicMethodIMP(<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span> <span class="hljs-keyword" style="color:rgb(133,153,0)">self</span>, SEL _cmd) {
+    <span class="hljs-comment" style="color:rgb(147,161,161)">// implementation ....</span>
+}
+<span class="hljs-class"><span class="hljs-keyword" style="color:rgb(133,153,0)">@implementation</span> <span class="hljs-title" style="color:rgb(181,137,0)">MyClass</span></span>
+&#43; (<span class="hljs-built_in" style="color:rgb(38,139,210)">BOOL</span>)resolveInstanceMethod:(SEL)aSEL
+{
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">if</span> (aSEL == <span class="hljs-keyword" style="color:rgb(133,153,0)">@selector</span>(resolveThisMethodDynamically)) {
+          class_addMethod([<span class="hljs-keyword" style="color:rgb(133,153,0)">self</span> class], aSEL, (IMP) dynamicMethodIMP, <span class="hljs-string" style="color:rgb(42,161,152)">&quot;v@:&quot;</span>);
+          <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> <span class="hljs-literal">YES</span>;
+    }
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> [<span class="hljs-keyword" style="color:rgb(133,153,0)">super</span> resolveInstanceMethod:aSEL];
+}
+<span class="hljs-keyword" style="color:rgb(133,153,0)">@end</span></code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+上面的例子为&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">resolveThisMethodDynamically</code>&nbsp;方法添加了实现内容，就是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">dynamicMethodIMP</code>&nbsp;方法中的代码。其中&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">&quot;v@:&quot;</code>&nbsp;表示返回&#20540;和参数，这个符号表示的含义见：<a target="_blank" href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html" target="_blank" style="color:rgb(64,148,199); text-decoration:none">Type
+ Encoding</a></p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+动态方法解析会在消息转发机制侵入前执行，动态方法解析器将会首先给予提供该方法选择器对应的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">IMP</code>&nbsp;的机会。如果你想让该方法选择器被传送到转发机制，就让&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">resolveInstanceMethod:</code>&nbsp;方法返回&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NO</code>。</p>
+</blockquote>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+消息转发</h2>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://upload-images.jianshu.io/upload_images/1330553-400bc5bde4db1725.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" class="imagebubble-image" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+重定向</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+消息转发机制执行前，Runtime 系统允许我们替换消息的接收者为其他对象。通过&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">- (id)forwardingTargetForSelector:(SEL)aSelector</code>&nbsp;方法。</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">- (<span class="hljs-keyword" style="color:rgb(133,153,0)">id</span>)forwardingTargetForSelector:(SEL)aSelector
+{
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">if</span>(aSelector == <span class="hljs-keyword" style="color:rgb(133,153,0)">@selector</span>(mysteriousMethod:)){
+        <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> alternateObject;
+    }
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> [<span class="hljs-keyword" style="color:rgb(133,153,0)">super</span> forwardingTargetForSelector:aSelector];
+}</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+如果此方法返回&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">nil</code>&nbsp;或者&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">self</code>，则会计入消息转发机制(<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>)，否则将向返回的对象重新发送消息。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+转发</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+当动态方法解析不做处理返回&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NO</code>&nbsp;时，则会触发消息转发机制。这时&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;方法会被执行，我们可以重写这个方法来自定义我们的转发逻辑：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">- (<span class="hljs-keyword" style="color:rgb(133,153,0)">void</span>)forwardInvocation:(<span class="hljs-built_in" style="color:rgb(38,139,210)">NSInvocation</span> *)anInvocation
+{
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">if</span> ([someOtherObject respondsToSelector:
+            [anInvocation selector]])
+        [anInvocation invokeWithTarget:someOtherObject];
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">else</span>
+        [<span class="hljs-keyword" style="color:rgb(133,153,0)">super</span> forwardInvocation:anInvocation];
+}</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+唯一参数是个&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSInvocation</code>&nbsp;类型的对象，该对象封装了原始的消息和消息的参数。我们可以实现&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;方法来对不能处理的消息做一些处理。也可以将消息转发给其他对象处理，而不抛出错误。</p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：参数&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">anInvocation 是从哪来的？</code><br>
+在&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;消息发送前，Runtime 系统会向对象发送<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">methodSignatureForSelector:</code>&nbsp;消息，并取到返回的方法签名用于生成
+ NSInvocation 对象。所以重写&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;的同时也要重写&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">methodSignatureForSelector:</code>&nbsp;方法，否则会抛异常。</p>
+</blockquote>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+当一个对象由于没有相应的方法实现而无法相应某消息时，运行时系统将通过&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;消息通知该对象。每个对象都继承了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;方法。但是，&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;中的方法实现只是简单的调用了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">doesNotRecognizeSelector:</code>。通过实现自己的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;方法，我们可以将消息转发给其他对象。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>&nbsp;方法就是一个不能识别消息的分发中心，将这些不能识别的消息转发给不同的接收对象，或者转发给同一个对象，再或者将消息翻译成另外的消息，亦或者简单的“吃掉”某些消息，因此没有响应也不会报错。这一切都取决于方法的具体实现。</p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>方法只有在消息接收对象中无法正常响应消息时才会被调用。所以，如果我们向往一个对象将一个消息转发给其他对象时，要确保这个对象不能有该消息的所对应的方法。否则，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">forwardInvocation:</code>将不可能被调用。</p>
+</blockquote>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+转发和多继承</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+转发和继承相&#20284;，可用于为 Objc 编程添加一些多继承的效果。就像下图那样，一个对象把消息转发出去，就好像它把另一个对象中的方法接过来或者“继承”过来一样。</p>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://upload-images.jianshu.io/upload_images/1330553-c7ef6392ecc9ee9d.gif?imageMogr2/auto-orient/strip" class="imagebubble-image" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+这使得在不同继承体系分支下的两个类可以实现“继承”对方的方法，在上图中&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Warrior</code>和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Diplomat</code>&nbsp;没有继承关系，但是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Warrior</code>&nbsp;将&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">negotiate</code>&nbsp;消息转发给了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Diplomat</code>&nbsp;后，就好&#20284;&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Diplomat</code>&nbsp;是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Warrior</code>&nbsp;的超类一样。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+消息转发弥补了 Objc 不支持多继承的性质，也避免了因为多继承导致单个类变得臃肿复杂。</p>
+<h3 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:22px">
+转发与继承</h3>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+虽然转发可以实现继承的功能，但是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;还是必须表面上很严谨，像&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">respondsToSelector:</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">isKindOfClass:</code>&nbsp;这类方法只会考虑继承体系，不会考虑转发链。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+如果上图中的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Warrior</code>&nbsp;对象被问到是否能响应&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">negotiate</code>消息：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent"><span class="hljs-keyword" style="color:rgb(133,153,0)">if</span> ( [aWarrior respondsToSelector:<span class="hljs-keyword" style="color:rgb(133,153,0)">@selector</span>(negotiate)] )
+    ...</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+回答当然是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NO</code>， 尽管它能接受&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">negotiate</code>&nbsp;消息而不报错，因为它靠转发消息给&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Diplomat</code>&nbsp;类响应消息。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+如果你就是想要让别人以为&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Warrior</code>&nbsp;继承到了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">Diplomat</code>&nbsp;的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">negotiate</code>&nbsp;方法，你得重新实现&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">respondsToSelector:</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">isKindOfClass:</code>&nbsp;来加入你的转发算法：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">- (<span class="hljs-built_in" style="color:rgb(38,139,210)">BOOL</span>)respondsToSelector:(SEL)aSelector
+{
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">if</span> ( [<span class="hljs-keyword" style="color:rgb(133,153,0)">super</span> respondsToSelector:aSelector] )
+        <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> <span class="hljs-literal">YES</span>;
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">else</span> {
+        <span class="hljs-comment" style="color:rgb(147,161,161)">/* Here, test whether the aSelector message can     *
+         * be forwarded to another object and whether that  *
+         * object can respond to it. Return YES if it can.  */</span>
+    }
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> <span class="hljs-literal">NO</span>;
+}</code></pre>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+除了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">respondsToSelector:</code>&nbsp;和&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">isKindOfClass:</code>&nbsp;之外，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">instancesRespondToSelector:</code>&nbsp;中也应该写一份转发算法。如果使用了协议，<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">conformsToProtocol:</code>&nbsp;同样也要加入到这一行列中。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+如果一个对象想要转发它接受的任何远程消息，它得给出一个方法标签来返回准确的方法描述&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">methodSignatureForSelector:</code>，这个方法会最终响应被转发的消息。从而生成一个确定的&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSInvocation</code>&nbsp;对象描述消息和消息参数。这个方法最终响应被转发的消息。它需要像下面这样实现：</p>
+<pre class="hljs objectivec" style="padding:9.5px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:13px; color:rgb(101,123,131); margin-top:0px; margin-bottom:20px; line-height:20px; word-break:break-all; word-wrap:normal; overflow:auto; background:rgb(253,246,227)"><code class="objectivec" style="padding:0px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; border:none; background-color:transparent">- (<span class="hljs-built_in" style="color:rgb(38,139,210)">NSMethodSignature</span>*)methodSignatureForSelector:(SEL)selector
+{
+    <span class="hljs-built_in" style="color:rgb(38,139,210)">NSMethodSignature</span>* signature = [<span class="hljs-keyword" style="color:rgb(133,153,0)">super</span> methodSignatureForSelector:selector];
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">if</span> (!signature) {
+       signature = [surrogate methodSignatureForSelector:selector];
+    }
+    <span class="hljs-keyword" style="color:rgb(133,153,0)">return</span> signature;
+}</code></pre>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+健壮的实例变量(Non Fragile ivars)</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+在 Runtime 的现行版本中，最大的特点就是健壮的实例变量了。当一个类被编译时，实例变量的内存布局就形成了，它表明访问类的实例变量的位置。实例变量一次根据自己所占空间而产生位移：</p>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://upload-images.jianshu.io/upload_images/1330553-bcbc243a281ef8d9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" class="imagebubble-image" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+上图左是&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;类的实例变量布局。右边是我们写的类的布局。这样子有一个很大的缺陷，就是缺乏拓展性。哪天苹果更新了&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;类的话，就会出现问题：</p>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://upload-images.jianshu.io/upload_images/1330553-33263710847f6d86.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" class="imagebubble-image" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+我们自定义的类的区域和父类的区域重叠了。只有苹果将父类改为以前的布局才能拯救我们，但这样导致它们不能再拓展它们的框架了，因为成员变量布局被固定住了。在脆弱的实例变量(Fragile ivar)环境下，需要我们重新编译继承自 Apple 的类来恢复兼容。如果是健壮的实例变量的话，如下图：</p>
+<div class="image-package imagebubble" style="margin:0px auto 20px; text-align:center; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<img src="http://7xjanq.com1.z0.glb.clouddn.com/Runtime7.png" alt="" style="max-width:100%; height:auto; vertical-align:middle; border:0px"><br>
+</div>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+在健壮的实例变量下，编译器生成的实例变量布局跟以前一样，但是当 Runtime 系统检测到与父类有部分重叠时它会调整你新添加的实例变量的位移，那样你再子类中新添加的成员变量就被保护起来了。</p>
+<blockquote style="padding:10px 15px; margin:0px 0px 20px; border-left-width:4px; border-left-style:solid; border-left-color:rgb(153,153,153); word-break:break-word; font-size:15px; line-height:30px; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; background-color:whitesmoke">
+<p style="margin-top:0px; margin-bottom:0px; line-height:1.7; text-align:justify; word-break:break-word">
+注意：<br>
+在健壮的实例变量下，不要使用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">siof(SomeClass)</code>，而是用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">class_getInstanceSize([SomeClass
+ class])</code>&nbsp;代替；也不要使用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">offsetof(SomeClass, SomeIvar)</code>，而要使用&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">ivar_getOffset(class_getInstanceVariable([SomeClass
+ class], &quot;SomeIvar&quot;))</code>&nbsp;来代替。</p>
+</blockquote>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<h2 style="margin:0px; font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; line-height:1.8; color:rgb(47,47,47); font-size:24px">
+总结</h2>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+我们让自己的类继承自&nbsp;<code style="padding:2px 4px; font-family:Menlo,Monaco,Consolas,'Courier New',monospace; font-size:12px; color:rgb(101,123,131); border:none; white-space:pre-wrap; background-color:rgb(253,246,227)">NSObject</code>&nbsp;不仅仅是因为基类有很多复杂的内存分配问题，更是因为这使得我们可以享受到
+ Runtime 系统带来的便利。</p>
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+虽然平时我们很少会考虑一句简单的调用方法，发送消息底层所做的复杂的操作，但深入理解 Runtime 系统的细节使得我们可以利用消息机制写出功能更强大的代码。</p>
+<hr style="margin:0px 0px 20px; border-right-width:0px; border-left-width:0px; border-top-style:solid; border-top-color:rgb(217,217,217); border-bottom-style:solid; border-bottom-color:white; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<p style="margin-top:0px; margin-bottom:25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+本文参考：</p>
+<ul style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px">本文参考Objective-C 2.0运行时系统编程指南</li><li style="line-height:30px"><a target="_blank" href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40008048" target="_blank" style="color:rgb(64,148,199); text-decoration:none">苹果官方
+ Runtime 文档</a></li><li style="line-height:30px"><a target="_blank" href="http://yulingtianxia.com/blog/2014/11/05/objective-c-runtime/" target="_blank" style="color:rgb(64,148,199); text-decoration:none">Objective-C Runtime</a></li></ul>
+<p></p>
+<ul style="padding:0px; margin:0px 0px 20px 25px; text-align:justify; word-break:break-word; color:rgb(47,47,47); font-family:'lucida grande','lucida sans unicode',lucida,helvetica,'Hiragino Sans GB','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; font-size:16px; line-height:27.2px">
+<li style="line-height:30px"><a target="_blank" href="http://cocoasamurai.blogspot.jp/2010/01/understanding-objective-c-runtime.html" target="_blank" style="color:rgb(64,148,199); text-decoration:none">Understanding the Objective-C Runtime</a></li></ul>
+<div style="text-align:justify"><span style="font-family:lucida grande,lucida sans unicode,lucida,helvetica,Hiragino Sans GB,Microsoft YaHei,WenQuanYi Micro Hei,sans-serif; color:#2f2f2f"><span style="font-size:16px; line-height:30px">转自：http://www.jianshu.com/p/1e06bfee99d0<br>
+</span></span></div>
+<p></p>
+   
+</div>
+
+
+
+
+<!-- Baidu Button BEGIN -->
+
+
+
+
+<div class="bdsharebuttonbox tracking-ad" style="float: right;" data-mod="popu_172">
+<a href="#" class="bds_more" data-cmd="more" style="background-position:0 0 !important; background-image: url(http://bdimg.share.baidu.com/static/api/img/share/icons_0_16.png?v=d754dcc0.png) !important"></a>
+<a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"  style="background-position:0 -52px !important"></a>
+<a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"style="background-position:0 -104px !important"></a>
+<a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"style="background-position:0 -260px !important"></a>
+<a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"style="background-position:0 -208px !important"></a>
+<a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"style="background-position:0 -1612px !important" ></a>
+</div>
+<script>window._bd_share_config = { "common": { "bdSnsKey": {}, "bdText": "", "bdMini": "1", "bdMiniList": false, "bdPic": "", "bdStyle": "0", "bdSize": "16" }, "share": {} }; with (document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' + ~(-new Date() / 36e5)];</script>
+<!-- Baidu Button END -->
+
+   
+
+<!--172.16.140.12-->
+
+<!-- Baidu Button BEGIN -->
+<script type="text/javascript" id="bdshare_js" data="type=tools&amp;uid=1536434" ></script>
+<script type="text/javascript" id="bdshell_js"></script>
+<script type="text/javascript">
+    document.getElementById("bdshell_js").src = "http://bdimg.share.baidu.com/static/js/shell_v2.js?cdnversion=" + Math.ceil(new Date()/3600000)
+</script>
+<!-- Baidu Button END -->
+
+
+
+ 
+
+
+        <div id="digg" ArticleId="50520439" >
+            <dl id="btnDigg" class="digg digg_disable"  onclick="btndigga();">
+               
+                 <dt>顶</dt>
+                <dd>0</dd>
+            </dl>
+           
+              
+            <dl id="btnBury" class="digg digg_disable"  onclick="btnburya();">
+              
+                  <dt>踩</dt>
+                <dd>0</dd>               
+            </dl>
+            
+        </div>
+     <div class="tracking-ad" data-mod="popu_222"><a href="javascript:void(0);" >&nbsp;</a>   </div>
+    <div class="tracking-ad" data-mod="popu_223"> <a href="javascript:void(0);" >&nbsp;</a></div>
+    <script type="text/javascript">
+                function btndigga() {
+                    $(".tracking-ad[data-mod='popu_222'] a").click();
+                }
+                function btnburya() {
+                    $(".tracking-ad[data-mod='popu_223'] a").click();
+                }
+            </script>
+
+   <ul class="article_next_prev">
+                <li class="prev_article"><span  onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_shangyipian']);location.href='http://blog.csdn.net/quanqinayng/article/details/50520380';">上一篇</span><a href="http://blog.csdn.net/quanqinayng/article/details/50520380" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_shangyipian'])">Touch ID 的使用</a></li>
+                <li class="next_article"><span onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_xiayipian']);location.href='http://blog.csdn.net/quanqinayng/article/details/50520467';">下一篇</span><a href="http://blog.csdn.net/quanqinayng/article/details/50520467" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_xiayipian'])">iOS程序员从小白到大神必读资料汇总(一)</a></li>
+    </ul>
+
+    <div style="clear:both; height:10px;"></div>
+
+
+            <div class="similar_article"   >
+                    <h4></h4>
+                    <div class="similar_c"style="margin:20px 0px 0px 0px">
+                        <div class="similar_c_t">
+                          &nbsp;&nbsp;相关文章推荐
+                        </div>
+                   
+                        <div class="similar_wrap tracking-ad" data-mod="popu_36" >                       
+                            <ul class="similar_list fl">    
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://blog.csdn.net/dangpf520/article/details/50523552" title="runtime 运行时机制" strategy="BlogCommendFromCsdn" target="_blank">runtime 运行时机制</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://songzhan.iteye.com/blog/1860776" title="5月6号 -- java基础（异常处理机制详解）转" strategy="BlogCommendFromCsdn" target="_blank">5月6号 -- java基础（异常处理机制详解）转</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://onway417.iteye.com/blog/2187596" title="11、jvm内存管理机制---运行时数据区" strategy="BlogCommendFromCsdn" target="_blank">11、jvm内存管理机制---运行时数据区</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://blog.csdn.net/kuangdacaikuang/article/details/53446417" title="iOS 开发 深入浅出Runtime运行时之方法动态处理(Dynamic Method Resolution)详解" strategy="BlogCommendFromCsdn" target="_blank">iOS 开发 深入浅出Runtime运行时之方法动态处理(Dynamic Method Resolution)详解</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://turnround.iteye.com/blog/1209674" title="java内存机制" strategy="BlogCommendFromCsdn" target="_blank">java内存机制</a>
+                                   </li>
+                            </ul>
+                              <ul class="similar_list fr">      
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://blog.csdn.net/x32sky/article/details/45021569" title="runtime 运行时机制 完全解读" strategy="BlogCommendFromCsdn" target="_blank">runtime 运行时机制 完全解读</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://stanlyy.iteye.com/blog/537869" title="Struts2配置详解" strategy="BlogCommendFromCsdn" target="_blank">Struts2配置详解</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://blog.csdn.net/u010130947/article/details/43735313" title="[IOS 开发] runtime 运行时机制 完全解读" strategy="BlogCommendFromCsdn" target="_blank">[IOS 开发] runtime 运行时机制 完全解读</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://nickfover.iteye.com/blog/2126863" title="4、内存管理机制---运行时数据区" strategy="BlogCommendFromCsdn" target="_blank">4、内存管理机制---运行时数据区</a>
+                                   </li>
+                                   <li>
+                                       <em>•</em>
+                                       <a href="http://freesea.iteye.com/blog/160124" title="JDK详解" strategy="BlogCommendFromCsdn" target="_blank">JDK详解</a>
+                                   </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>   
+      
+</div>
+
+    <div>
+        
+
+        <script type="text/javascript">
+            /*博客内容页下方Banner1-728*90，创建于2016-12-13*/
+            var cpro_id = "u2843949";
+        </script>
+        <script type="text/javascript" src="http://cpro.baidustatic.com/cpro/ui/c.js"></script>
+
+     </div>
+
+<div id="suggest"></div>
+         <script  language="javascript" type='text/javascript'>     
+             $(function(){
+                 $.get("/quanqinayng/svc/GetSuggestContent/50520439",function(data){
+                     $("#suggest").html(data);
+                 });     
+             });             
+         </script>  
+
+        <dl class="blog-ass-articl tracking-ad" id="res-relatived" data-mod="popu_84"  > 
+             <dt><span>猜你在找</span></dt>    
+           
+    
+           
+
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/46" title="机器学习之概率与统计推断" strategy="undefined" target="_blank">机器学习之概率与统计推断</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/49" title="机器学习之数学基础" strategy="undefined" target="_blank">机器学习之数学基础</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/48" title="机器学习之凸优化" strategy="undefined" target="_blank">机器学习之凸优化</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/47" title="机器学习之矩阵" strategy="undefined" target="_blank">机器学习之矩阵</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/detail/421" title="响应式布局全新探索" strategy="undefined" target="_blank">响应式布局全新探索</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/detail/426" title="探究Linux的总线、设备、驱动模型" strategy="undefined" target="_blank">探究Linux的总线、设备、驱动模型</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/detail/422" title="深度学习基础与TensorFlow实践" strategy="undefined" target="_blank">深度学习基础与TensorFlow实践</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/45" title="深度学习之神经网络原理与实战技巧" strategy="undefined" target="_blank">深度学习之神经网络原理与实战技巧</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/43" title="前端开发在线峰会" strategy="undefined" target="_blank">前端开发在线峰会</a>
+                        </dd>
+                        <dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px; white-space: nowrap;">
+                             <a href="http://edu.csdn.net/huiyiCourse/series_detail/44" title="TensorFlow实战进阶：手把手教你做图像识别应用" strategy="undefined" target="_blank">TensorFlow实战进阶：手把手教你做图像识别应用</a>
+                        </dd>
+        </dl>
+
+
+
+    <div id="ad_cen">        
+                <div>
+                              <script type="text/javascript">
+                                  /*博客内容页下方Banner-728*90，创建于2014-7-3*/
+                                  var cpro_id = "u1607657";
+                                            </script>
+                              <script type="text/javascript" src="http://cpro.baidustatic.com/cpro/ui/c.js"></script>
+                    </div>
+    </div>  
+
+        <!-- 广告位开始 -->
+        <!-- 广告位结束 -->
+
+
+<div class="comment_class">
+    <div id="comment_title" class="panel_head">
+        <span class="see_comment">查看评论</span><a name="comments"></a></div>
+    <div id="comment_list">
+    </div>
+    <div id="comment_bar">
+    </div>
+    <div id="comment_form">
+    </div>
+    <div class="announce">
+        * 以上用户言论只代表其个人观点，不代表CSDN网站的观点或立场<a name="reply"></a><a name="quote"></a></div>
+</div>
+
+<script type="text/javascript">
+    var fileName = '50520439';
+    var commentscount = 0;
+    var islock = false
+</script>
+
+    <div id="ad_bot">
+    </div>
+<div id="report_dialog">
+</div>
+
+<div id="d-top"  style="bottom:60px;">
+
+        <a id="quick-reply" class="btn btn-top q-reply" title="快速回复" style="display:none;">
+            <img src="http://static.blog.csdn.net/images/blog-icon-reply.png" alt="快速回复">
+        </a>    
+    <a id="d-top-a" class="btn btn-top backtop"  style="display: none;" title="返回顶部" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_huidaodingbu'])" style="">         
+         <img src="http://static.blog.csdn.net/images/top.png" alt="TOP">
+    </a>
+</div>
+<script type="text/javascript">
+    $(function ()
+    {
+        $("#ad_frm_0").height("90px");
+        
+        setTimeout(function(){
+            $("#ad_frm_2").height("200px");
+        },1000);    
+    });
+  
+</script>
+<style type="text/css">
+    .tag_list
+    {
+        background: none repeat scroll 0 0 #FFFFFF;
+        border: 1px solid #D7CBC1;
+        color: #000000;
+        font-size: 12px;
+        line-height: 20px;
+        list-style: none outside none;
+        margin: 10px 2% 0 1%;
+        padding: 1px;
+    }
+    .tag_list h5
+    {
+        background: none repeat scroll 0 0 #E0DBD3;
+        color: #47381C;
+        font-size: 12px;
+        height: 24px;
+        line-height: 24px;
+        padding: 0 5px;
+        margin: 0;
+    }
+    .tag_list h5 a
+    {
+        color: #47381C;
+    }
+    .classify
+    {
+        margin: 10px 0;
+        padding: 4px 12px 8px;
+    }
+    .classify a
+    {
+        margin-right: 20px;
+        white-space: nowrap;
+    }
+</style>
+
+
+
+
+
+<div id="pop_win" style="display:none ;position: absolute; z-index: 10000; border: 1px solid rgb(220, 220, 220); top: 222.5px; left: 630px; opacity: 1; background: none 0px 0px repeat scroll rgb(255, 255, 255);">
+    
+</div>
+<div id="popup_mask"></div>
+<style>
+    #popup_mask
+    {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 9999;
+        left: 0px;
+        top: 0px;
+        opacity: 0.3;
+        filter: alpha(opacity=30);
+        display: none;
+    }
+
+</style>
+
+
+
+
+<script type="text/javascript">
+    $(function(){        
+        
+        setTimeout(function(){
+            $(".comment_body:contains('回复')").each(function(index,item){
+                var u=$(this).text().split('：')[0].toString().replace("回复","")
+                var thisComment=$(this);
+                if(u)
+                {
+                    $.getJSON("https://passport.csdn.net/get/nick?callback=?", {users: u}, function(a) {
+                        if(a!=null&&a.data!=null&&a.data.length>0)
+                        {
+                            nick=a.data[0].n; 
+                            if(u!=nick)
+                            {
+                                thisComment.text(thisComment.text().replace(u,nick));  
+                            }
+                        }       
+                    });  
+                }
+            });         
+
+        },200);  
+
+        setTimeout(function(){
+            $(".math").each(function(index,value){$(this).find("span").last().css("color","#fff"); })
+        },5000);
+
+        setTimeout(function(){
+            $(".math").each(function(index,value){$(this).find("span").last().css("color","#fff"); })
+        },10000);
+
+        setTimeout(function(){
+            $(".math").each(function(index,value){$(this).find("span").last().css("color","#fff"); })
+        },15000);
+        
+        setTimeout(function(){
+            $("a img[src='http://js.tongji.linezing.com/stats.gif']").parent().css({"position":"absolute","left":"50%"});
+        },300);
+    });
+
+    function loginbox(){
+        var $logpop=$("#pop_win");
+        $logpop.html('<iframe src="https://passport.csdn.net/account/loginbox?service=http://static.blog.csdn.net/callback.htm" frameborder="0" height="600" width="400" scrolling="no"></iframe>');
+
+        $('#popup_mask').css({
+            opacity: 0.5,
+            width: $( document ).width() + 'px',
+            height:  $( document ).height() + 'px'
+        });
+        $('#popup_mask').css("display","block");
+ 
+        $logpop.css( {
+            top: ($( window ).height() - $logpop.height())/ 2  + $( window 
+       ).scrollTop() + 'px',
+            left:($( window ).width() - $logpop.width())/ 2
+        } );
+ 
+        setTimeout( function () {
+            $logpop.show();
+            $logpop.css( {
+                opacity: 1
+            } );
+        }, 200 );
+ 
+        $('#popup_mask').unbind("click");
+        $('#popup_mask').bind("click", function(){
+            $('#popup_mask').hide();
+            var $clopop = $("#pop_win");
+            $("#common_ask_div_sc").css("display","none");
+            $clopop.css( {
+                opacity: 0
+            } );
+            setTimeout( function () {
+                $clopop.hide();
+            }, 350 );
+            return false;
+        });
+    }   
+
+    var articletitle='详解Runtime运行时机制';
+
+</script>
+
+
+
+
+
+
+
+
+
+
+                        <div class="clear">
+                        </div>
+                    </div>                   
+                
+            </div>
+                   
+           <div id="side">
+               
+    <div class="side">
+<div id="panel_Profile" class="panel">
+<ul class="panel_head"><span>个人资料</span></ul>
+<ul class="panel_body profile">
+<div id="blog_userface">
+    <a href="http://my.csdn.net/quanqinayng" target="_blank">
+    <img src="http://avatar.csdn.net/9/9/A/1_quanqinayng.jpg" title="访问我的空间" style="max-width:90%"/>
+    </a>
+    <br />
+    <span><a href="http://my.csdn.net/quanqinayng" class="user_name" target="_blank">quanqinayng</a></span>
+</div>
+<div class="interact">
+
+    <a href="javascript:void(0);" class="attent" id="span_add_follow" title="[加关注]"></a>
+
+ <a href="javascript:void(0);" class="letter"  title="[发私信]" onclick="window.open('http://msg.csdn.net/letters/model?receiver=quanqinayng','_blank','height=350,width=700');_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_sixin'])"></a>  
+</div>
+<div id="blog_medal">
+                <div id="bms_box">
+                                            <a  target="_blank">
+                                                    <img src="http://c.csdnimg.cn/jifen/images/xunzhang/xunzhang/chizhiyiheng.png" onmouseover="m_over_m(this,4)" onmouseout="m_out_m()" alt="3" >
+                                            </a>
+               </div>
+</div>
+<ul id="blog_rank">
+    <li>访问：<span>647369次</span></li>
+    <li>积分：<span>9313</span> </li>    
+    <li >等级： <span style="position:relative;display:inline-block;z-index:1" >
+            <img src="http://c.csdnimg.cn/jifen/images/xunzhang/jianzhang/blog6.png" alt="" style="vertical-align: middle;" id="leveImg">
+            <div id="smallTittle" style=" position: absolute;  left: -24px;  top: 25px;  text-align: center;  width: 101px;  height: 32px;  background-color: #fff;  line-height: 32px;  border: 2px #DDDDDD solid;  box-shadow: 0px 2px 2px rgba (0,0,0,0.1);  display: none;   z-index: 999;">
+            <div style="left: 42%;  top: -8px;  position: absolute;  width: 0;  height: 0;  border-left: 10px solid transparent;  border-right: 10px solid transparent;  border-bottom: 8px solid #EAEAEA;"></div>
+            积分：9313 </div>
+        </span>  </li>
+    <li>排名：<span>第1843名</span></li>
+</ul>
+<ul id="blog_statistics">
+    <li>原创：<span>245篇</span></li>
+    <li>转载：<span>249篇</span></li>
+    <li>译文：<span>8篇</span></li>
+    <li>评论：<span>111条</span></li>
+</ul>
+</ul>
+</div>
+
+
+
+
+<div id="custom_column_27974413" class="panel">
+<ul class="panel_head"><span>作者简介</span></ul>
+<ul class="panel_body">
+
+关注：iOS开发、产品经理
+
+</ul>
+</div><div class="panel" id="panel_Search">
+    <ul class="panel_head"><span>文章搜索</span></ul>
+    <ul class="panel_body" class="form_search">
+        <form id="frmSearch" action="http://so.csdn.net/search" class="form_search csdn-tracking-statistics" target="_blank"  data-mod="popu_306">
+        <span><input id="inputSearch" type="text" class="blogsearch" title="请输入关键字" /></span>
+        <input id="btnSubmit" type="button" value="搜索" title="search in blog" />
+        <input type="hidden" name="q" id="inputQ" />
+        <input type="hidden" name="t" value="blog" />
+        <a id="btnSearchBlog" target="_blank"></a>
+        </form>
+    </ul>
+</div>
+
+<script type="text/javascript">
+
+   
+    $(function () {
+        $("#btnSubmit").unbind("click");
+        $("#btnSubmit").click(function () {           
+            search();
+        });
+
+        $("#frmSearch").submit(function () {           
+            search();
+            return false;
+        });
+
+        function search()
+        {
+            if ($("#inputSearch").val() == "") {               
+                alert("请录入搜索关键词！");                         
+                return false;
+            }
+            //var url = "http://so.csdn.net/so/search/s.do?q=" + encodeURIComponent($("#inputSearch").val()) + "&u=" + username + "&t=blog";           
+            var url = "https://www.baidu.com/s?wd=" + encodeURIComponent($("#inputSearch").val()) + "%20site%3Ablog.csdn.net"
+            window.location.href = url;
+        }   
+    });
+</script><div id="panel_Category" class="panel">
+<ul class="panel_head"><span>文章分类</span></ul>
+<ul class="panel_body">    
+                 <li>
+                    <a href="/quanqinayng/article/category/1915207" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">Objective-C</a><span>(66)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1316169" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">iOS</a><span>(302)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1816953" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">iOS7</a><span>(117)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/2607129" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">iOS8</a><span>(8)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/2306665" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">Swift</a><span>(8)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/6555752" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">数据分析</a><span>(1)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1433815" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">cocos2d</a><span>(2)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1433816" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">cocos2d-x</a><span>(3)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1750943" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">phoneGap</a><span>(6)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1753309" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">jQuery Mobile</a><span>(3)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1753649" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">IScroll</a><span>(1)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1821813" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">开源框架</a><span>(5)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1817099" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">设计模式</a><span>(5)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1759423" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">互联网</a><span>(27)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1799511" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">五哥生活</a><span>(21)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1804727" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">头脑风暴</a><span>(3)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1804725" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">IT新闻</a><span>(5)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1621079" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">商业模式</a><span>(5)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1542987" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">管理</a><span>(7)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1537477" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">产品经理</a><span>(40)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1811687" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">交互设计</a><span>(7)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1806413" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">产品运营</a><span>(6)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1816967" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">产品设计</a><span>(9)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1816965" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">用户体验</a><span>(2)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1816969" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">需求分析</a><span>(0)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1816973" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">职场功略</a><span>(8)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1835819" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">哲理收藏</a><span>(10)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1887037" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">读书</a><span>(10)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/1910007" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">工作工具</a><span>(12)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/2653013" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">审核</a><span>(1)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/2675819" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">axure</a><span>(1)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/5130997" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">Android</a><span>(9)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/5738741" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">React-Native</a><span>(11)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/5829339" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">iOS9</a><span>(1)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/5847277" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">ReactiveCocoa</a><span>(5)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/5912067" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">Html5</a><span>(3)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/6082470" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">Node.js</a><span>(4)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/6090795" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">MongoDB</a><span>(1)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/6195404" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">RunTime</a><span>(3)</span>
+                </li>
+                 <li>
+                    <a href="/quanqinayng/article/category/6397876" onclick="_gaq.push(['_trackEvent','function', 'onclick', 'blog_articles_wenzhangfenlei']); ">PMP</a><span>(2)</span>
+                </li>
+</ul>
+</div><div id="panel_Archive" class="panel">
+<ul class="panel_head"><span>文章存档</span></ul>
+<ul class="panel_body">
+<div id="archive_list">
+<!--归档统计-->
+<li><a href="/quanqinayng/article/month/2017/06">2017年06月</a><span>(1)</span></li><li><a href="/quanqinayng/article/month/2017/04">2017年04月</a><span>(1)</span></li><li><a href="/quanqinayng/article/month/2017/03">2017年03月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2017/02">2017年02月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2017/01">2017年01月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2016/12">2016年12月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/11">2016年11月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/10">2016年10月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/09">2016年09月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/08">2016年08月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2016/07">2016年07月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2016/06">2016年06月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2016/05">2016年05月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/04">2016年04月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/03">2016年03月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2016/02">2016年02月</a><span>(4)</span></li><li><a href="/quanqinayng/article/month/2016/01">2016年01月</a><span>(8)</span></li><li><a href="/quanqinayng/article/month/2015/12">2015年12月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2015/11">2015年11月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2015/10">2015年10月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2015/09">2015年09月</a><span>(10)</span></li><li><a href="/quanqinayng/article/month/2015/08">2015年08月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2015/07">2015年07月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2015/06">2015年06月</a><span>(14)</span></li><li><a href="/quanqinayng/article/month/2015/05">2015年05月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2015/04">2015年04月</a><span>(11)</span></li><li><a href="/quanqinayng/article/month/2015/03">2015年03月</a><span>(5)</span></li><li><a href="/quanqinayng/article/month/2015/02">2015年02月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2015/01">2015年01月</a><span>(6)</span></li><li><a href="/quanqinayng/article/month/2014/12">2014年12月</a><span>(8)</span></li><li><a href="/quanqinayng/article/month/2014/11">2014年11月</a><span>(7)</span></li><li><a href="/quanqinayng/article/month/2014/10">2014年10月</a><span>(8)</span></li><li><a href="/quanqinayng/article/month/2014/09">2014年09月</a><span>(11)</span></li><li><a href="/quanqinayng/article/month/2014/08">2014年08月</a><span>(12)</span></li><li><a href="/quanqinayng/article/month/2014/07">2014年07月</a><span>(22)</span></li><li><a href="/quanqinayng/article/month/2014/06">2014年06月</a><span>(13)</span></li><li><a href="/quanqinayng/article/month/2014/05">2014年05月</a><span>(13)</span></li><li><a href="/quanqinayng/article/month/2014/04">2014年04月</a><span>(20)</span></li><li><a href="/quanqinayng/article/month/2014/03">2014年03月</a><span>(15)</span></li><li><a href="/quanqinayng/article/month/2014/02">2014年02月</a><span>(38)</span></li><li><a href="/quanqinayng/article/month/2014/01">2014年01月</a><span>(30)</span></li><li><a href="/quanqinayng/article/month/2013/12">2013年12月</a><span>(67)</span></li><li><a href="/quanqinayng/article/month/2013/11">2013年11月</a><span>(22)</span></li><li><a href="/quanqinayng/article/month/2013/10">2013年10月</a><span>(2)</span></li><li><a href="/quanqinayng/article/month/2013/09">2013年09月</a><span>(24)</span></li><li><a href="/quanqinayng/article/month/2013/08">2013年08月</a><span>(10)</span></li><li><a href="/quanqinayng/article/month/2013/07">2013年07月</a><span>(8)</span></li><li><a href="/quanqinayng/article/month/2013/06">2013年06月</a><span>(14)</span></li><li><a href="/quanqinayng/article/month/2013/05">2013年05月</a><span>(3)</span></li>
+</div>
+</ul>
+</div>
+<div id="hotarticls" class="panel">
+<ul class="panel_head">
+    <span>       
+阅读排行    </span>
+</ul>
+
+<ul class="panel_body itemlist">
+<li>
+<a href="/quanqinyang/article/details/52215652" title="React Native调试技巧与心得">React Native调试技巧与心得</a><span>(16523)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/17137759" title="Storyboard使用心得">Storyboard使用心得</a><span>(12979)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/52215641" title="React Native布局详细指南">React Native布局详细指南</a><span>(10329)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/39547727" title="Error Domain=AVFoundationErrorDomain Code=-11800 &quot;这项操作无法完成&quot;">Error Domain=AVFoundationErrorDomain Code=-11800 &quot;这项操作无法完成&quot;</a><span>(10299)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/52563661" title="iOS开发 适配Xcode8以及iOS10-权限问题">iOS开发 适配Xcode8以及iOS10-权限问题</a><span>(9527)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/38384915" title="UITableViewCell的prepareForReuse方法">UITableViewCell的prepareForReuse方法</a><span>(8106)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/11498879" title="固定cell.imageView.image的大小">固定cell.imageView.image的大小</a><span>(7272)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/9010977" title="XCode真机测试发布时产生The executable was signed with invalid entitlements.解决办法">XCode真机测试发布时产生The executable was signed with invalid entitlements.解决办法</a><span>(6507)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/41986513" title="add &quot;remote-notification&quot; to the list of your supported UIBackgroundModes in your Info.plist.">add &quot;remote-notification&quot; to the list of your supported UIBackgroundModes in your Info.plist.</a><span>(6475)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/19409745" title="开发库整理">开发库整理</a><span>(6314)</span>
+</li>
+</ul>
+</div>
+<div id="hotarticls2" class="panel">
+<ul class="panel_head"><span>评论排行</span></ul>
+<ul class="panel_body itemlist">
+<li>
+<a href="/quanqinyang/article/details/39997405" title="Valid signing identity not found解决办法（原有IDP私钥丢失）及Certificate、App ID、Devices、Provisioning Profiles之间区别">Valid signing identity not found解决办法（原有IDP私钥丢失）及Certificate、App ID、Devices、Provisioning Profiles之间区别</a><span>(12)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/38381223" title="UITextField限制输入中文字数">UITextField限制输入中文字数</a><span>(8)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/17301659" title="phonegap百度社会化分享-插件ios">phonegap百度社会化分享-插件ios</a><span>(5)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/38897023" title="移动App架构设计">移动App架构设计</a><span>(5)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/39958099" title="有关UIWebView的SSL总结">有关UIWebView的SSL总结</a><span>(4)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/53926851" title="ipv6审核被拒绝的解决方案">ipv6审核被拒绝的解决方案</a><span>(4)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/39547727" title="Error Domain=AVFoundationErrorDomain Code=-11800 &quot;这项操作无法完成&quot;">Error Domain=AVFoundationErrorDomain Code=-11800 &quot;这项操作无法完成&quot;</a><span>(4)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/40737675" title="osx升级到10.10后，使用pod install报错解决办法">osx升级到10.10后，使用pod install报错解决办法</a><span>(3)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/17025225" title="IOS 7新特性--UIActionSheet">IOS 7新特性--UIActionSheet</a><span>(3)</span>
+</li>
+<li>
+<a href="/quanqinyang/article/details/50783618" title="iOS 利用 framework 进行动态更新">iOS 利用 framework 进行动态更新</a><span>(3)</span>
+</li>
+</ul>
+</div>
+<div id="homepageArticles" class="panel tracking-ad" data-mod="popu_4">
+<ul class="panel_head"><span>推荐文章</span></ul>
+<ul class="panel_body" id="ad_commend">
+<ul>
+<li><a href="http://blog.csdn.net/blogdevteam/article/details/74233634" target="_blank">* CSDN日报20170703——《从高考到程序员——我一直在寻找答案》</a></li>
+<li><a href="http://blog.csdn.net/zwluoyuxi/article/details/73977651" 
+target="_blank">* 从源码剖析PopupWindow 兼容Android 6.0以上版本点击外部不消失</a></li>
+<li><a href="http://blog.csdn.net/briblue/article/details/73928350"target="_blank">* 轻松学，Java 中的代理模式及动态代理</a></li>
+<li><a href="http://blog.csdn.net/liyuanxiang1984/article/details/73928254" 
+target="_blank">* ArcGIS水文分析实战教程——河流提取与河网分级</a></li>
+<li><a href="http://blog.csdn.net/liuchonge/article/details/73649251" 
+target="_blank">* Tensorflow中使用TFRecords高效读取数据--结合NLP数据实践</a></li>
+<li><a href="http://blog.csdn.net/broadview2006/article/details/73839579" 
+target="_blank">* 每周荐书：MyBatis、并行编程、Ansible（评论送书）</a></li>
+
+</ul></ul>
+</div>
+
+
+<div id="newcomments" class="panel">
+<ul class="panel_head"><span>最新评论</span></ul>
+<ul class="panel_body itemlist">
+    <li>
+   
+         <a href="/quanqinyang/article/details/53926851#comments">ipv6审核被拒绝的解决方案</a>
+    <p style="margin:0px;"><a href="/xiaomage88888" class="user_name">xiaomage88888</a>:
+用路由器可以完美解决IOS开发审核时IPV6的问题，欢迎加QQ1417402731咨询和讨论
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/53926851#comments">ipv6审核被拒绝的解决方案</a>
+    <p style="margin:0px;"><a href="/xiaomage88888" class="user_name">xiaomage88888</a>:
+用路由器可以完美解决IOS开发审核时IPV6的问题，欢迎加QQ1417402731咨询和讨论
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/19122949#comments">Application Loader下载安装和发布app程序</a>
+    <p style="margin:0px;"><a href="/xxw888" class="user_name">xxw888</a>:
+Application Loader跨平台下载和完整、详细、清晰的iOS APP上传流程。http:...
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/19122949#comments">ipv6审核被拒绝的解决方案</a>
+    <p style="margin:0px;"><a href="/Yangyangyangt" class="user_name">Yangyangyangt</a>:
+大哥. 你没有写上群号是多少啊..... ,,,,
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/19122949#comments">Application Loader下载安装和发布app程序</a>
+    <p style="margin:0px;"><a href="/qtb58" class="user_name">qtb58</a>:
+iOS APP上架很繁复，需要很多时间，推荐快速发布ios app工具appuploader，快速申...
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/51902875#comments">IQKeyboardManager使用导航上移问题</a>
+    <p style="margin:0px;"><a href="/bin236" class="user_name">bin236</a>:
+你试了吗?我试了为什么设置之后IQKeyboard就不能用了
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/52215652#comments">React Native调试技巧与心得</a>
+    <p style="margin:0px;"><a href="/zongxiaomi" class="user_name">zongxiaomi</a>:
+React-native调试小技巧，在Logcat输出console的loghttp://www.j...
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/50699461#comments">SVN Unable to connect to a repository at URL</a>
+    <p style="margin:0px;"><a href="/sinat_36521092" class="user_name">sinat_36521092</a>:
+楼主，本人也碰到了这样的问题，想问一下&quot;把本地钥匙串里的密码删除，在配置svn时在保存新的密码&quot;这个...
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/51201047#comments">写了 35 年代码的老程序员的最大遗憾</a>
+    <p style="margin:0px;"><a href="/feng2qing" class="user_name">feng2qing</a>:
+给赞
+    </p>
+    </li>
+    <li>
+   
+         <a href="/quanqinyang/article/details/51321338#comments">iOS中教你快速掌握LLDB调试技巧</a>
+    <p style="margin:0px;"><a href="/feng2qing" class="user_name">feng2qing</a>:
+已关注   不错哦
+    </p>
+    </li>
+</ul>
+</div>
+    </div>
+    <div class="clear">
+    </div>
+
+
+                   <!-- 广告位开始 -->                    <!-- 广告位结束 -->
+                   <div class="tracking-ad" data-view="true"  data-mtp="63" data-order="40" data-con="ad_content_1260" style="width: 200px; height: 200px;">
+                         <div id="nav_show_top_stop" style="width: 200px;height: 200px;z-index:1000"><div id="cpro_u2734128"></div></div>
+                   </div>
+    <script type="text/javascript">
+        setTimeout(function () {
+            var naviga_offsetTop = 0;
+            function naviga_stay_top() { var scrollTop = jQuery(document).scrollTop(); if (scrollTop > naviga_offsetTop) { jQuery("#nav_show_top_stop").css({ "position": "fixed" }); jQuery("#nav_show_top_stop").css({ "top": "0px" }); } else { jQuery("#nav_show_top_stop").css({ "position": "fixed" }); jQuery("#nav_show_top_stop").css({ "top": naviga_offsetTop - scrollTop + "px" }); } }
+            function onload_function() { naviga_offsetTop = jQuery("#nav_show_top_stop").position().top; jQuery(window).bind("scroll", naviga_stay_top); jQuery(window).bind("mousewheel", naviga_stay_top); jQuery(document).bind("scroll", naviga_stay_top); jQuery(document).bind("mousewheel", naviga_stay_top); } jQuery(document).ready(onload_function);
+
+        }, 200);
+    </script>
+<script type="text/javascript">(window.cproArray = window.cproArray || []).push({ id: "u2734128" });  </script> 
+                    <script src="http://cpro.baidustatic.com/cpro/ui/c.js" type="text/javascript"></script> 
+
+           </div>   
+
+            <div class="clear">
+            </div>
+        </div>
+
+        
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="http://passport.csdn.net/content/loginbox/login.js"></script>
+<script type="text/javascript">
+    $(function () {
+        function __get_code_toolbar(snippet_id) {
+            return $("<span class='tracking-ad' data-mod='popu_167'><a href='https://code.csdn.net/snippets/"
+                    + snippet_id
+                    + "' target='_blank' title='在CODE上查看代码片'  style='text-indent:0;'><img src='https://code.csdn.net/assets/CODE_ico.png' width=12 height=12 alt='在CODE上查看代码片' style='position:relative;top:1px;left:2px;'/></a></span>"
+                    + "<span class='tracking-ad' data-mod='popu_170'><a href='https://code.csdn.net/snippets/"
+                    + snippet_id
+                    + "/fork' target='_blank' title='派生到我的代码片' style='text-indent:0;'><img src='https://code.csdn.net/assets/ico_fork.svg' width=12 height=12 alt='派生到我的代码片' style='position:relative;top:2px;left:2px;'/></a></span>");
+        }
+        
+        $("[code_snippet_id]").each(function () {
+            __s_id = $(this).attr("code_snippet_id");
+            if (__s_id != null && __s_id != "" && __s_id != 0 && parseInt(__s_id) > 70020) {
+                __code_tool = __get_code_toolbar(__s_id);
+                $(this).prev().find(".tools").append(__code_tool);
+            }
+        });
+
+        $(".bar").show();
+    });
+</script>
+
+
+
+
+
+    </div>
+      <!--new top-->
+    
+
+     
+
+   
+        <!--new top-->
+   
+   
+
+    
+    
+    
+   
+
+   
+
+
+       <script type="text/javascript" src="http://static.blog.csdn.net/public/res/bower-libs/MathJax/MathJax.js?config=TeX-AMS_HTML"></script>
+          <script type="text/javascript">
+              //$(function () {
+              //    setTimeout(function () {
+              //        var searchtitletags = articletitle + ',' + $("#tags").html();
+              //        searchService({
+              //            index: 'blog',
+              //            query: searchtitletags,
+              //            from: 5,
+              //            size: 5,
+              //            appendTo: '#res',
+              //            url: 'recommend',
+              //            his: 2,
+              //            client: "blog_cf_enhance",
+              //            tmpl: '<dd style="background:url(http://static.blog.csdn.net/skin/default/images/blog-dot-red3.gif) no-repeat 0 10px;"><a href="#{ url }" title="#{ title }" strategy="#{ strategy }">#{ title }</a></dd>'
+              //        });
+              //    }, 1000);
+              //});
+
+         </script>
+    
+    <script src="http://static.blog.csdn.net/scripts/csdn_blog_detail.min.js" type="text/javascript"></script>
+        
+    <script type="text/javascript" src="http://c.csdnimg.cn/blog/csdn_public_blog_detail.min.js?20170626001"></script>
+
+    <script type="text/javascript" src="http://medal.blog.csdn.net/showblogmedal.ashx?blogid=1395999"></script>
+
+     
+    
+
+
+  <div id="a52b5334d" style="width: 1px; height: 1px; display: none;">
+                    <script id="adJs52b5334"></script>
+                    <script>document.getElementById("adJs52b5334").src = "http://ads.csdn.net/js/opt/52b5334.js?t=" + Math.random();</script>
+   </div>
+
+    
+    
+        
+     
+
+    
+          
+    <div class="pop_CA_cover"  style="display:none"></div>
+    <div class="pop pop_CA"  style="display:none">
+          <div class="CA_header">
+            收藏助手
+            <span class="cancel_icon"  id="fapancle"  onclick="$('.pop_CA').hide();$('.pop_CA_cover').hide();"></span>
+          </div>
+          <iframe src="" id="fa" frameborder="0" width="100%" height="360"  scrolling="no" ></iframe>
+    </div>
+
+
+        <script type="text/javascript">
+
+            $(function () {
+                var fromjs = $("#fromjs");
+                if (fromjs.length > 0) {
+                    $("#fromjs .markdown_views pre").addClass("prettyprint");
+                    prettyPrint();
+
+                    $('pre.prettyprint code').each(function () {
+                        var lines = $(this).text().split('\n').length;
+                        var $numbering = $('<ul/>').addClass('pre-numbering').hide();
+                        $(this).addClass('has-numbering').parent().append($numbering);
+                        for (i = 1; i <= lines; i++) {
+                            $numbering.append($('<li/>').text(i));
+                        };
+                        $numbering.fadeIn(1700);
+                    });
+
+                    $('.pre-numbering li').css("color", "#999");
+                }
+            });
+
+            $(".markdown_views a[target!='_blank']").attr("target", "_blank");
+
+            //$(".toc a[target='_blank']").attr("target", "");
+
+            setTimeout(function () {
+                $(".toc a[target='_blank']").attr("target", "");
+            }, 500);
+
+        </script>
+
+</body>
+</html>   
